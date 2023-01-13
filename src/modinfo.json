@@ -1,9 +1,9 @@
 ﻿{
-  "id": "testmod",
-  "name": "Test Mod",
-  "version": "0.1.0",
-  "authors": "Author",
-  "description": "Put a neat description here",
+  "id": "hydrogen-rocks",
+  "name": "Hydrogen Rocks",
+  "version": "1.0.0",
+  "authors": "Dual",
+  "description": "This mod is my sense of humor. It's also a good starting point for aspiring mod programmers.<LINE><LINE>View the code here: github.com/Dual-Iron/hydrogen-rocks<LINE><LINE>Makes rocks explode after being thrown.",
   "requirements": [],
   "requirements_names": [],
   "checksum_override_version": false

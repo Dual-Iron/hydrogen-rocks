@@ -1,1 +1,5 @@
-Once cloned, rename `src/TestMod.csproj` and open it to create a solution file in the root folder (Ctrl-Shift-S in Visual Studio). Then edit `src/modinfo.json` and `src/Plugin.cs` to customize your mod.
+Makes rocks explode when you throw them.
+
+This repository is a good starting point for new mod developers. Feel free to take code from it or copy it outright.
+
+![](boom.jpg)
