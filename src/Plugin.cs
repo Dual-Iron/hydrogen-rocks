@@ -14,18 +14,12 @@ sealed class Plugin : BaseUnityPlugin
     // This method runs when the plugin is enabled.
     public void OnEnable()
     {
-        On.MultiplayerUnlocks.SandboxItemUnlocked += MultiplayerUnlocks_SandboxItemUnlocked;
         // We want rocks to explode after they stop flying.
         // To do this, we hijack `Weapon.ChangeMode` here:
         On.Weapon.ChangeMode += OnChangeMode;
 
         // Change when scavengers decide to pick up and use bomb-rocks.
         On.ScavengerAI.WeaponScore += ScavengerAI_WeaponScore;
-    }
-
-    private bool MultiplayerUnlocks_SandboxItemUnlocked(On.MultiplayerUnlocks.orig_SandboxItemUnlocked orig, MultiplayerUnlocks self, MultiplayerUnlocks.SandboxUnlockID unlockID)
-    {
-        return orig(self, unlockID) || unlockID == MultiplayerUnlocks.SandboxUnlockID.Scavenger;
     }
 
     void OnChangeMode(On.Weapon.orig_ChangeMode orig, Weapon self, Weapon.Mode newMode)
