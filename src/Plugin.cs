@@ -1,5 +1,10 @@
 ﻿using BepInEx;
+using RWCustom;
+using System.Security.Permissions;
 using UnityEngine;
+
+#pragma warning disable CS0618 // Do not remove the following line.
+[assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
 namespace HydrogenRocks;
 
@@ -9,9 +14,18 @@ sealed class Plugin : BaseUnityPlugin
     // This method runs when the plugin is enabled.
     public void OnEnable()
     {
+        On.MultiplayerUnlocks.SandboxItemUnlocked += MultiplayerUnlocks_SandboxItemUnlocked;
         // We want rocks to explode after they stop flying.
-        // To do this, we hijack `Weapon.ChangeMode`:
+        // To do this, we hijack `Weapon.ChangeMode` here:
         On.Weapon.ChangeMode += OnChangeMode;
+
+        // Change when scavengers decide to pick up and use bomb-rocks.
+        On.ScavengerAI.WeaponScore += ScavengerAI_WeaponScore;
+    }
+
+    private bool MultiplayerUnlocks_SandboxItemUnlocked(On.MultiplayerUnlocks.orig_SandboxItemUnlocked orig, MultiplayerUnlocks self, MultiplayerUnlocks.SandboxUnlockID unlockID)
+    {
+        return orig(self, unlockID) || unlockID == MultiplayerUnlocks.SandboxUnlockID.Scavenger;
     }
 
     void OnChangeMode(On.Weapon.orig_ChangeMode orig, Weapon self, Weapon.Mode newMode)
@@ -68,5 +82,52 @@ sealed class Plugin : BaseUnityPlugin
         // Destroy the rock.
         rock.abstractPhysicalObject.Destroy();
         rock.Destroy();
+    }
+
+    // This code is largely copied from ScavengerAI.WeaponScore in dnSpy. Don't be afraid to look at Rain World's code when writing your own!
+    int ScavengerAI_WeaponScore(On.ScavengerAI.orig_WeaponScore orig, ScavengerAI self, PhysicalObject obj, bool pickupDropInsteadOfWeaponSelection)
+    {
+        // If the object being examined isn't a rock, return the vanilla value.
+        if (obj is not Rock) {
+            return orig(self, obj, pickupDropInsteadOfWeaponSelection);
+        }
+
+        // If the scav is only picking up the bomb, it doesn't hesitate.
+        if (pickupDropInsteadOfWeaponSelection) {
+            return 3;
+        }
+        // If the scav is actually using the bomb, but not trying to kill something, it doesn't use the bomb.
+        if (self.currentViolenceType != ScavengerAI.ViolenceType.Lethal) {
+            return 0;
+        }
+        // If the scav has a target, it judges if the bomb is viable to use before doing so.
+        if (self.focusCreature != null) {
+            if (ShouldAttack(self, self.focusCreature)) {
+                return 3;
+            }
+            return 0;
+        }
+        // Otherwise, the scav refuses to throw a bomb, unless it's really scared.
+        if (self.scared < 0.9f) {
+            return 0;
+        }
+        return 1;
+    }
+
+    bool ShouldAttack(ScavengerAI ai, Tracker.CreatureRepresentation target)
+    {
+        // If the scav is too close to the target, don't throw the bomb.
+        if (Vector2.Distance(ai.scavenger.mainBodyChunk.pos, ai.scavenger.room.MiddleOfTile(target.BestGuessForPosition())) < 300f) {
+            return false;
+        }
+        // Examine each creature the scav knows about.
+        foreach (var crit in ai.tracker.creatures) {
+            // If it's pack members one, and the pack member is close to the target, then don't throw the bomb.
+            if (crit.dynamicRelationship.currentRelationship.type == CreatureTemplate.Relationship.Type.Pack && Custom.ManhattanDistance(crit.BestGuessForPosition(), target.BestGuessForPosition()) < 7) {
+                return false;
+            }
+        }
+        // Ok throw the bomb
+        return true;
     }
 }
