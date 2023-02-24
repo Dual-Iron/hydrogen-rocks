@@ -6,5 +6,6 @@
   "description": "This mod is my sense of humor. It's also a good starting point for aspiring mod programmers.<LINE><LINE>View the code here: github.com/Dual-Iron/hydrogen-rocks<LINE><LINE>Makes rocks explode after being thrown.",
   "requirements": [],
   "requirements_names": [],
+  "tags": [ "Items" ],
   "checksum_override_version": false
 }
